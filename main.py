@@ -23,6 +23,10 @@ from pathlib import Path  # standard library only; nothing is installed before t
 def main() -> int:
     here = Path(__file__).resolve().parent
     picture = (here / "entry.png").read_bytes()
+    if not picture:
+        # An empty picture would hand the judge a blank frame; refuse it.
+        print("entry.png is empty", file=sys.stderr)
+        return 1
     # The picture is a JPEG under the name entry.png; the gate tells the
     # format from the first bytes, so nothing here needs to know or care.
     out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
@@ -31,8 +35,10 @@ def main() -> int:
     target.write_bytes(picture)
     # Fail loudly rather than silently shipping a partial copy: the judge
     # sees exactly these bytes, so the written file must match the source.
-    if target.read_bytes() != picture:
+    written = target.read_bytes()
+    if written != picture:
         return 1
+    print(f"wrote {target} ({len(written)} bytes)")
     return 0
 
 
